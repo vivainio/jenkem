@@ -6,6 +6,7 @@ from datetime import datetime
 from pickleshare import PickleShareDB
 import sys
 import pprint
+import fnmatch
 
 db = PickleShareDB("~/jenkem")
 
@@ -17,8 +18,6 @@ def require_var(varname):
         sys.exit(1)
     return val
 
-#j = jenkins.Jenkins('http://alusta-jenkins.basware.com')
-
 _j = None
 
 def j():
@@ -26,7 +25,6 @@ def j():
 
     if _j is None:
         _j = jenkins.Jenkins(require_var("repository"))
-        # 'http://alusta-jenkins.basware.com')
 
     return _j
 
@@ -39,24 +37,23 @@ class Job:
 
     def builds(self):
         job_info = self.info()
+        #print "ji", job_info
         lastIdx = job_info['lastBuild']['number']
         firsIdx = max(lastIdx - 3, 1)
         for idx in range(lastIdx, firsIdx -1, -1):
             build_info = j().get_build_info(self.name, idx,1)
             print "  " + build_summary(build_info)
 
-
-def find_jobs(pat):
-    jobs = j().get_job_info_regex(pat)
-    for job in jobs:
-        yield job
-
+    def log(self):
+        job_info = self.info()
+        lastIdx = job_info['lastBuild']['number']
+        text = j().get_build_console_output(self.name, lastIdx)
+        print text
 
 def jobs_c(args):
-    jobs = db['jobs']
+    jobs = find_jobs("*" + args.jobpattern+ "*")
     for j in jobs:
-        if args.jobpattern in j['name']:
-            print job_summary(j)
+        print j
 
 
 def job_summary(job_info):
@@ -92,10 +89,8 @@ def builds_c(args):
 
 
 def log_c(args):
-	name = args.jobname;
-	builds = args.builds[0]
-	job_info = j().get_job_info(name)
-	pprint.pprint(job_info)
+    job = Job(args.jobname)
+    job.log()
 
 def set_c(args):
     print "Setting", args
@@ -104,6 +99,37 @@ def set_c(args):
 def sync_c(args):
     jobs = j().get_jobs()
     db['jobs'] = jobs
+
+def match_pat(s, pat):
+    #print "match", s, "with",pat
+    return fnmatch.fnmatch(s,pat)
+
+def find_jobs(pat):
+    jobs = db['jobs']
+    return [ j['name'] for j in jobs if match_pat(j['name'], pat)]
+
+def fav_c(args):
+    n = args.jobname
+    jobs = find_jobs(n)
+
+    if not n in jobs:
+        print "No such job, did you mean:"
+        print "\n".join(jobs)
+        return
+    favs = db.get('favs', set())
+    favs.add(n)
+    db['favs'] = favs
+
+def favs_c(args):
+    favs = db['favs']
+    for job in [Job(n) for n in favs]:
+        print job.name
+        job.builds()
+
+def log_c(args):
+    j = Job(args.jobname)
+    j.log()
+
 
 def main():
     args.init()
@@ -114,7 +140,8 @@ def main():
     c.arg('job')
 
     c = args.sub('log', log_c)
-    c.arg('jobname', type=str)
+    c.arg('jobname')
+
     c.arg('build', type=int, nargs='?')
 
     c = args.sub('set', set_c)
@@ -123,8 +150,13 @@ def main():
 
     c = args.sub('sync', sync_c)
 
+    c  = args.sub('fav', fav_c)
+    c.arg('jobname')
+
+    c = args.sub('favs', favs_c)
 
     args.parse()
+
 
 main()
 
