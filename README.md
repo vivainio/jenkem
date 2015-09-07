@@ -1,6 +1,6 @@
 # Personalized jenkins experience
 
-Jenkins web ui can be slow. This app is faster, as maintains job listing offline
+Jenkins web ui can be slow. This app is faster, as it maintains job listing offline.
 
 Features:
 
@@ -12,5 +12,5 @@ Features:
 
 Todo:
 
-- Angular 2 UI
+- Angular 2 UI (because I need an excuse to play with Angular 2)
 - Other stuff I use
