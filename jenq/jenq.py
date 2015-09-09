@@ -122,11 +122,9 @@ def find_jobs(pat):
     return [ j['name'] for j in jobs if match_pat(j['name'], pat)]
 
 def find_job_or_pick(jobname):
-    print 'pick', jobname
     jobs = db['jobs']
     if jobname is None:
         inp = "\n".join(j['name'] for j in jobs)
-        print "peco for",inp
         out = runpeco(inp)
         return out.strip()
 
