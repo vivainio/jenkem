@@ -122,6 +122,10 @@ def find_jobs(pat):
     return [ j['name'] for j in jobs if match_pat(j['name'], pat)]
 
 def find_job_or_pick(jobname):
+    aliased = db.get('alias', {}).get(jobname)
+    if aliased:
+        return aliased
+        
     jobs = db['jobs']
     if jobname is None:
         inp = "\n".join(j['name'] for j in jobs)
@@ -149,6 +153,15 @@ def favs_c(args):
         print job.name
         job.builds()
 
+def alias_c(args):
+
+    aliases = db.get('alias', {})
+    if args.shortname is None:
+        pprint.pprint(aliases)
+        return
+    jobname = find_job_or_pick(args.jobname)
+    aliases[args.shortname] = jobname
+    db['alias'] = aliases
 
 def main():
     args.init()
@@ -173,6 +186,10 @@ def main():
     c.arg('jobname')
 
     c = args.sub('favs', favs_c)
+
+    c = args.sub('alias', alias_c)
+    c.arg('shortname', nargs='?')
+    c.arg('jobname', nargs='?')
 
     args.parse()
 
