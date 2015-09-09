@@ -7,9 +7,11 @@ from pickleshare import PickleShareDB
 import sys
 import pprint
 import fnmatch
+import tempfile
+from subprocess import Popen, PIPE
+import os
 
 db = PickleShareDB("~/jenkem")
-
 
 def require_var(varname):
     val = db.get("config/" + varname)
@@ -27,6 +29,16 @@ def j():
         _j = jenkins.Jenkins(require_var("repository"))
 
     return _j
+
+def runpeco(input):
+    tf = tempfile.NamedTemporaryFile(delete=False)
+    tf.write(input)
+    tf.close()
+    p = Popen(['peco', tf.name], stdout = PIPE)
+    out = p.stdout.read()
+    os.unlink(tf.name)
+    return out
+
 
 class Job:
     def __init__(self, name):
@@ -89,7 +101,8 @@ def builds_c(args):
 
 
 def log_c(args):
-    job = Job(args.jobname)
+    jobname = find_job_or_pick(args.jobname)
+    job = Job(jobname)
     job.log()
 
 def set_c(args):
@@ -108,9 +121,21 @@ def find_jobs(pat):
     jobs = db['jobs']
     return [ j['name'] for j in jobs if match_pat(j['name'], pat)]
 
+def find_job_or_pick(jobname):
+    print 'pick', jobname
+    jobs = db['jobs']
+    if jobname is None:
+        inp = "\n".join(j['name'] for j in jobs)
+        print "peco for",inp
+        out = runpeco(inp)
+        return out.strip()
+
+    return jobname
+
+
 def fav_c(args):
     n = args.jobname
-    jobs = find_jobs(n)
+    jobs = find_job_or_pick(n)
 
     if not n in jobs:
         print "No such job, did you mean:"
@@ -126,10 +151,6 @@ def favs_c(args):
         print job.name
         job.builds()
 
-def log_c(args):
-    j = Job(args.jobname)
-    j.log()
-
 
 def main():
     args.init()
@@ -140,7 +161,7 @@ def main():
     c.arg('job')
 
     c = args.sub('log', log_c)
-    c.arg('jobname')
+    c.arg('jobname', nargs='?')
 
     c.arg('build', type=int, nargs='?')
 
