@@ -40,5 +40,5 @@ optional arguments:
 
 TODO:
 
-- Angular 2 Web UI (coming later)
+- Angular 2 Web UI
 - Grepping console output for common error patterns
