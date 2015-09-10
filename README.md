@@ -9,7 +9,7 @@ Commands that take job name as argument launch peco if no job name is provided.
 Installation:
 
 (soon to appear in PyPi, but in the meantime...)
-
+```
 $ choco install peco
 $ git clone https://github.com/vivainio/jenkem.git
 $ cd jenkem
@@ -17,7 +17,6 @@ $ pip install -r requirements.txt
 $ cd jenq
 $ python jenq.py set repository http://address-to-my-jenkins
 
-```
 $ python .\jenq.py -h
 usage: jenq.py [-h] {jobs,builds,log,set,sync,fav,favs,alias,jobinfo,go} ...
 
