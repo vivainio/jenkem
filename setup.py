@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='jenkem',
-      version='0.1.1',
+      version='0.1.2',
       description='A command line interface for jenkins',
       author='Ville Vainio',
       author_email='vivainio@gmail.com',
@@ -10,7 +10,7 @@ setup(name='jenkem',
       install_requires='pickleshare',
       entry_points = {
         'console_scripts': [
-            'jenq = jenq.jenq:main',
+            'jenkem = jenq.jenq:main',
         ]
       }
      )
